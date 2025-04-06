@@ -3,7 +3,7 @@
 """
 @Time    : 2020-02-02 00:02
 @Author  : xxy1991
-@Email   : xxy1991@gmail.com
+@Email   : xxy@lesscode.dev
 """
 
 import json

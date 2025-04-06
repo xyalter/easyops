@@ -3,9 +3,5 @@
 """
 @Time    : 2020-01-31 18:36
 @Author  : xxy1991
-@Email   : xxy1991@gmail.com
+@Email   : xxy@lesscode.dev
 """
-
-
-class Linux(object):
-    pass

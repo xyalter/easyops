@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "easyops"
+dynamic = ["version"]
+dependencies = ["sortedcontainers", "requests", "invoke", "jinja2"]
+requires-python = ">=3.9"
+authors = [{ name = "xxy", email = "xxy@lesscode.dev" }]
+maintainers = [{ name = "xxy", email = "xxy@lesscode.dev" }]
+description = "easily ops"
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = ["easyops", "netboot", "debian"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+  "Operating System :: POSIX :: Linux",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: System Administrators",
+  "Topic :: Internet",
+  "Topic :: System :: Installation/Setup",
+  "Topic :: System :: Networking",
+  "Topic :: System :: Operating System",
+  "Topic :: System :: Systems Administration",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/xyalter/easyops"
+Documentation = "https://docs.lesscode.dev"
+Repository = "https://github.com/xyalter/easyops.git"
+"Bug Tracker" = "https://github.com/xyalter/easyops/issues"
+Changelog = "https://github.com/xyalter/easyops/blob/main/CHANGELOG.md"
+
+[project.scripts]
+"easyops" = "easyops.cli:entry_func"
+
+[tool.hatch.version]
+path = "easyops/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/.devcontainer",
+  "/.vscode",
+  "/docs",
+  "/archives",
+  "/tests",
+  "/tools",
+  "/private",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["easyops"]

@@ -3,8 +3,8 @@
 """
 @Time    : 2020-01-31 18:36
 @Author  : xxy1991
-@Email   : xxy1991@gmail.com
+@Email   : xxy@lesscode.dev
 """
 
-from .host import Host
+from .host import Host, BootType
 from .manager import Config

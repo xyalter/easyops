@@ -63,12 +63,12 @@ d-i partman-partitioning/confirm_write_new_label boolean true
 #d-i partman-auto/choose_recipe select atomic
 d-i partman-auto/expert_recipe string                         \
       aioroot ::                                              \
-              1000 100 -1 ext4                               \
-                      $primary{ } $bootable{ }                \
-                      method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ ext4 }    \
-                      mountpoint{ / }                         \
-              .
+            1000 100 -1 ext4                                  \
+                  $primary{ } $bootable{ }                    \
+                  method{ format } format{ }                  \
+                  use_filesystem{ } filesystem{ ext4 }        \
+                  mountpoint{ / }                             \
+            .
 #d-i partman-auto/choose_recipe select aioroot
 d-i partman/choose_partition select finish
 # default no prompt and create swap file auto
@@ -86,7 +86,7 @@ d-i apt-setup/security_host string {{ mirror }}
 tasksel tasksel/first multiselect openssh-server
 # for security, init script to set SSH-Key
 # openssh-server openssh-server/permit-root-login boolean false
-d-i pkgsel/include string curl python3-pip
+d-i pkgsel/include string {{ packages | join(' ') }}
 
 # use script, no effect
 # grub-pc grub-pc/hidden_timeout boolean false
@@ -98,7 +98,33 @@ d-i finish-install/reboot_in_progress note
 
 # d-i preseed/late_command string apt-install zsh; in-target chsh -s /bin/zsh
 d-i preseed/late_command string \
-in-target mkdir /root/.ssh; \
-in-target wget "https://cfg.ori.fyi/keys/root_rsa_2048.pub" \
--qO "/root/.ssh/authorized_keys";
+mkdir -p /target/root/.ssh; \
+{% if root_key.startswith('http') -%}
+wget "{{ root_key }}" \
+-qO "/target/root/.ssh/authorized_keys"; \
+{%- else -%}
+cp /data/{{ root_key }} \
+"/target/root/.ssh/authorized_keys"; \
+{%- endif %}
+mkdir -p /target/home/{{ username }}/.ssh; \
+{% if user_key.startswith('http') -%}
+wget "{{ user_key }}" \
+-qO "/target/home/{{ username }}/.ssh/authorized_keys"; \
+{%- else -%}
+cp /data/{{ user_key }} \
+"/target/home/{{ username }}/.ssh/authorized_keys"; \
+{%- endif %}
+chown {{ username }}:{{ username }} /target/home/{{ username }}/.ssh; \
+in-target usermod -a -G sudo {{ username }}; \
+mkdir /target/data{{ "; \\" if post_scripts is defined }}
+{% if post_scripts is defined -%}
+mkdir -p /target/data/preseed; \
+{% set post_script = post_scripts | first -%}
+{% if post_script.startswith('http') -%}
+wget -P /target/data/preseed -Nq "{{ post_scripts | first }}"; \
+sh /target/data/preseed/late_command.sh;
+{%- else -%}
+sh {{ post_script }};
+{%- endif %}
+{%- endif %}
 {{''}}

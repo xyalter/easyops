@@ -3,7 +3,7 @@
 """
 @Time    : 2020-01-31 18:36
 @Author  : xxy1991
-@Email   : xxy1991@gmail.com
+@Email   : xxy@lesscode.dev
 """
 
 from os.path import dirname
@@ -11,6 +11,8 @@ from os.path import join as path_join
 from os.path import sep as path_sep
 
 from .config import Config, Host
+
+__version__ = "1.2.0"
 
 CONF_PATH = path_join("..", "configs")
 CONF_APT_PATH = path_join(CONF_PATH, "apt")

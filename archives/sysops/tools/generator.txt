@@ -9,7 +9,6 @@ from sysops.config import Config
 from sysops.config import path_join, CFG_WEB_PATH, CONF_PATH, SH_PATH, CONF_PRESEED_PATH, BUILD_TMP_PATH
 from sysops.config.linux import Debian, Ubuntu
 from sysops.config.util import read_text, write_text, sudo
-from sysops.tools.docker import Docker
 
 
 # def gen_apt(key):
@@ -52,8 +51,7 @@ def gen_preseed():
                 root_password=host.users['root']['password'],
                 username=host.username, fullname=host.fullname,
                 user_password=host.users[host.username]['password'],
-                proxy=proxy,
-                gui=host.gui,
+                proxy=proxy
             )
             if host.os == 'debian':
                 if '.' not in host.mirror:

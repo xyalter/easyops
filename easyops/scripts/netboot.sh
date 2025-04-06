@@ -47,24 +47,44 @@ netboot_preseed() {
     gzip "${initrd_file}"
 }
 
-# netboot_attach(str os, str file_path, str base_path)
+# netboot_attach(str os, str src_path, str dest_path, str base_path)
 netboot_attach() {
     cd "${BOOT_PATH}" || exit
-    attach_file="${2}"
-    base_path="${3}"
     initrd_file="${1}-installer/amd64/initrd"
+    attach_file="${2}"
+    dest_path="${3}"
+    base_path="${4}"
     gunzip "${initrd_file}.gz"
     if [ -f "${base_path}/${attach_file}" ]; then
         cd "${base_path}" || exit
-        ls "${attach_file}" | cpio -H newc -o -A -F "${BOOT_PATH}/${initrd_file}"
-        cd "${BOOT_PATH}"
+        find . -maxdepth 1 -name "${attach_file}" -print0 |
+            cpio --null -H newc -o -A -F "${BOOT_PATH}/${initrd_file}"
+        # find . -maxdepth 1 -name "${attach_file}" -print0 | \
+        #     cpio --null -H newc -o -F "/tmp/append.cpio"
+        cd "${BOOT_PATH}" || exit
     elif [ -d "${base_path}/${attach_file}" ]; then
-        cd "${base_path}" || exit
-        find "${attach_file}" -depth -print0 | cpio --null -H newc -o -A -F "${BOOT_PATH}/${initrd_file}"
-        cd "${BOOT_PATH}"
+        mkdir -p "/tmp/easyops/${dest_path}"
+        find "/tmp/easyops" -mindepth 1 -print0 | \
+            pax -w -0 -a -f "${BOOT_PATH}/${initrd_file}" \
+                -x sv4cpio -s "|^/tmp/easyops/||"
+
+        # find "${attach_file}" -print0 |
+        #   cpio --null -H newc -ov -A -F "${BOOT_PATH}/${initrd_file}"
+        # find "${attach_file}" -depth -print0 | cpio --null -H newc -o -F "/tmp/append.cpio"
+        # cpio -tv < "/tmp/append.cpio"
+
+        # cp -p "${BOOT_PATH}/${initrd_file}" "/tmp/append.cpio"
+        pax -w -a -f "${BOOT_PATH}/${initrd_file}" \
+            -x sv4cpio -s "|^${base_path}|${dest_path}|" \
+            "${base_path}/${attach_file}"
     else
         echo "attach file exception: ${base_path}/${attach_file}"
     fi
+    #    gzip "/tmp/append.cpio"
+    #    cp -p "${BOOT_PATH}/${initrd_file}.gz" "${BOOT_PATH}/${initrd_file}.gz.ori"
+    #    cat "${BOOT_PATH}/${initrd_file}.gz.ori" "/tmp/append.cpio.gz" >"${BOOT_PATH}/${initrd_file}.gz"
+    #    rm -f "${BOOT_PATH}/${initrd_file}.gz.ori"
+    #    rm -f "/tmp/append.cpio.gz"
     gzip "${initrd_file}"
 }
 

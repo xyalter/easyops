@@ -3,36 +3,51 @@
 """
 @Time    : 2020-02-02 00:02
 @Author  : xxy1991
-@Email   : xxy1991@gmail.com
+@Email   : xxy@lesscode.dev
 """
 
 import json
-import unittest
 from typing import List
 
-from easyops.linux.apt2 import SourceConfigSet, SourceConfigItem
+import pytest
+
+from easyops.linux.apt2 import SourceConfigSet
 
 
-class TestApt(unittest.TestCase):
-    def setUp(self) -> None:
-        with open('./sources.json', 'r') as f:
-            self.src_list = json.load(f)
+@pytest.fixture
+def config_set():
+    """Load and return test configurations from sources.json"""
+    with open("./sources.json", "r", encoding="utf-8") as f:
+        src_list = json.load(f)
+    return SourceConfigSet(src_list)
 
-        self.configSet = SourceConfigSet(self.src_list)
 
-    def test_config_set(self) -> None:
-        config = self.configSet.get_mirror()
-        self.assertEqual('aly', config.name)
-        config = self.configSet.get_mirror(name='163')
-        config = self.configSet.get_by_name(os='common', name='163')
-        self.assertEqual('mirrors.163.com', config.host)
-        config = self.configSet.get_mirror(os='debian', location='hk')
-        self.assertEqual('auto', config.name)
-        self.assertEqual('debian', config.os)
+def test_config_set_get_mirror():
+    """Verify retrieval of default mirror configuration from sources.json"""
+    config = config_set.get_mirror()
+    assert config.name == "aly"
 
-        def scheme(schemes: List[str]):
-            return 'mirror' not in schemes
 
-        config = self.configSet.get_mirror(os='ubuntu', scheme=scheme)
-        self.assertEqual('aly', config.name)
-        self.assertTrue(scheme(config.scheme))
+def test_config_set_get_by_name():
+    """Test getting mirror configuration by specific mirror name (163)"""
+    config = config_set.get_mirror(name="163")
+    assert config.host == "mirrors.163.com"
+    config = config_set.get_by_name(os="common", name="163")
+    assert config.host == "mirrors.163.com"
+
+
+def test_config_set_location_filter():
+    """Validate filtering of mirrors by OS (debian) and location (Hong Kong)"""
+    config = config_set.get_mirror(os="debian", location="hk")
+    assert config.name == "auto"
+    assert config.os == "debian"
+
+
+def test_config_set_scheme_filter():
+    """Test scheme filtering functionality with allowed schemes (http, https)"""
+    def scheme_filter(schemes: List[str]):
+        return "mirror" not in schemes
+
+    config = config_set.get_mirror(os="ubuntu", scheme=scheme_filter)
+    assert config.name == "aly"
+    assert scheme_filter(config.scheme)

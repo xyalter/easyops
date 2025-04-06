@@ -32,6 +32,7 @@ d-i netcfg/get_nameservers string {{ network_dns }}
 {%- endif %}
 
 d-i netcfg/get_hostname string {{ fqdn }}
+d-i netcfg/get_domain string {{ domain }}
 
 # list select
 #d-i mirror/http/countries select CN
@@ -83,27 +84,45 @@ d-i apt-setup/security_host string {{ mirror }}
 tasksel tasksel/first multiselect {{ features | join(' ') }}
 # for security, init script to set SSH-Key
 # openssh-server openssh-server/permit-root-login boolean false
-d-i pkgsel/include string bash-completion irqbalance sudo \
-wget ca-certificates curl lsb-release python3-pip
+d-i pkgsel/include string {{ packages | join(' ') }}
 
 grub-pc grub-pc/timeout string 3
 d-i grub-installer/bootdev string default
 
 # auto reboot
-# d-i finish-install/reboot_in_progress note
+d-i finish-install/reboot_in_progress note
 
 # d-i preseed/late_command string apt-install zsh; in-target chsh -s /bin/zsh
 d-i preseed/late_command string \
 mkdir -p /target/root/.ssh; \
+{% if root_key.startswith('http') -%}
 wget "{{ root_key }}" \
 -qO "/target/root/.ssh/authorized_keys"; \
+{%- else -%}
+cp /data/{{ root_key }} \
+"/target/root/.ssh/authorized_keys"; \
+{%- endif %}
 mkdir -p /target/home/{{ username }}/.ssh; \
+{% if user_key.startswith('http') -%}
 wget "{{ user_key }}" \
 -qO "/target/home/{{ username }}/.ssh/authorized_keys"; \
+chmod 600 /target/home/{{ username }}/.ssh/authorized_keys; \
+{%- else -%}
+cp /data/{{ user_key }} \
+"/target/home/{{ username }}/.ssh/authorized_keys"; \
+chmod 600 /target/home/{{ username }}/.ssh/authorized_keys; \
+{%- endif %}
+in-target chown -R {{ username }}:{{ username }} /home/{{ username }}/.ssh; \
 in-target usermod -a -G sudo {{ username }}; \
-mkdir /target/data{{ "; \\" if post_scripts is not none }}
-{% if post_scripts is not none -%}
-in-target wget -P /data -Nq "{{ post_scripts | first }}"; \
-in-target bash /data/late_command.sh;
+mkdir /target/data{{ "; \\" if post_scripts is defined }}
+{% if post_scripts is defined -%}
+mkdir -p /target/data/preseed; \
+{% set post_script = post_scripts | first -%}
+{% if post_script.startswith('http') -%}
+wget -P /target/data/preseed -Nq "{{ post_scripts | first }}"; \
+sh /target/data/preseed/late_command.sh;
+{%- else -%}
+sh {{ post_script }};
+{%- endif %}
 {%- endif %}
 {{''}}

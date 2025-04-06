@@ -1,0 +1,45 @@
+load_ssh_configs: false
+
+sudo:
+  password: Test123!
+
+Hosts:
+  default:
+    port: 22
+    domain: lesscode.dev
+    mirror: auto
+    username: test
+    fullname: Test User
+    users:
+      root:
+        key: test_rsa_2048
+        password: Test123!
+      test:
+        key: test_rsa_2048
+        password: Test123!
+    features:
+      - ssh-server
+    packages:
+      - [ wget, ca-certificates, curl ]
+      - [ lsb-release, pax ]
+  debian:
+    os: debian
+    host: debian-std
+  ubuntu:
+    os: ubuntu
+    host: ubuntu-std
+  test1:
+    os: debian
+    mirror: xtom
+    host: test1
+    username: test1
+    fullname: Test1
+    users:
+      test1:
+        key: test1_rsa_2048
+        password: Test223!
+  test2:
+    os: ubuntu
+    mirror: aly-vpc
+    postScripts:
+      - "https://develop.xxy.fyi/preseed/test/late_command.sh"

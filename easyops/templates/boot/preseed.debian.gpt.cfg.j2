@@ -1,0 +1,134 @@
+#_preseed_V1
+# language country keyboard
+# netcfg mirror user
+# ntp timezone disk
+# base-system apt-cfg soft
+# update tasksel grub utc
+# popularity??
+
+# no effect ?
+# d-i preseed/interactive boolean true
+
+d-i debian-installer/language string en_US:en
+d-i debian-installer/country string CN
+# prompt and effect but preferred better
+# d-i debian-installer/locale string en_US.UTF-8
+d-i localechooser/preferred-locale select en_US.UTF-8
+# default haven't, for script control
+# d-i localechooser/supported-locales multiselect en_US.UTF-8, zh_CN.UTF-8
+d-i keyboard-configuration/xkb-keymap select cn
+
+d-i netcfg/dhcp_timeout string 5
+d-i netcfg/dhcpv6_timeout string 3
+
+{% if network_ipv4 is defined -%}
+d-i netcfg/get_ipaddress string {{ network_ipv4 }}
+#d-i netcfg/get_netmask string 255.255.255.0
+d-i netcfg/get_gateway string {{ network_gateway }}
+{%- endif %}
+{% if network_dns is defined -%}
+d-i netcfg/get_nameservers string {{ network_dns }}
+#d-i netcfg/confirm_static boolean true
+{%- endif %}
+
+d-i netcfg/get_hostname string {{ fqdn }}
+d-i netcfg/get_domain string {{ domain }}
+
+# list select
+#d-i mirror/http/countries select CN
+#d-i mirror/http/mirror select ftp.cn.debian.org
+d-i mirror/country string manual
+d-i mirror/http/hostname string {{ mirror }}
+d-i mirror/http/directory string /debian
+# if comment proxy to pause
+d-i mirror/http/proxy string {{ proxy }}
+
+d-i passwd/root-password password {{ root_password }}
+d-i passwd/root-password-again password {{ root_password }}
+d-i passwd/user-fullname string {{ fullname }}
+d-i passwd/username string {{ username }}
+d-i passwd/user-password password {{ user_password }}
+d-i passwd/user-password-again password {{ user_password }}
+
+d-i clock-setup/ntp-server string stdtime.gov.hk
+d-i clock-setup/utc boolean true
+
+d-i partman/early_command string \
+debconf-set partman-auto/disk "$(list-devices disk | head -n1)"
+d-i partman-auto/method string regular
+#d-i partman-partitioning/choose_label select gpt
+d-i partman-partitioning/confirm_write_new_label boolean true
+#d-i partman-auto/choose_recipe select atomic
+d-i partman-auto/expert_recipe string                         \
+      aioroot ::                                              \
+            538 538 1075 free                                 \
+                  $iflabel{ gpt }                             \
+                  $reusemethod{ }                             \
+                  method{ efi }                               \
+                  format{ }                                   \
+            .                                                 \
+            1000 100 -1 ext4                                  \
+                  $primary{ } $bootable{ }                    \
+                  method{ format } format{ }                  \
+                  use_filesystem{ } filesystem{ ext4 }        \
+                  mountpoint{ / }                             \
+            .
+#d-i partman-auto/choose_recipe select aioroot
+d-i partman/choose_partition select finish
+d-i partman-basicfilesystems/no_swap boolean false
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+# default prompt but to false still installed
+popularity-contest popularity-contest/participate boolean false
+d-i apt-setup/contrib boolean true
+d-i apt-setup/non-free boolean true
+d-i apt-setup/security_host string {{ mirror }}
+# if use xfce
+# tasksel tasksel/first multiselect ssh-server xfce-desktop
+# tasksel tasksel/first multiselect ssh-server
+tasksel tasksel/first multiselect {{ features | join(' ') }}
+# for security, init script to set SSH-Key
+# openssh-server openssh-server/permit-root-login boolean false
+d-i pkgsel/include string {{ packages | join(' ') }}
+
+grub-pc grub-pc/timeout string 3
+d-i grub-installer/bootdev string default
+
+# auto reboot
+d-i finish-install/reboot_in_progress note
+
+# d-i preseed/late_command string apt-install zsh; in-target chsh -s /bin/zsh
+d-i preseed/late_command string \
+mkdir -p /target/root/.ssh; \
+{% if root_key.startswith('http') -%}
+wget "{{ root_key }}" \
+-qO "/target/root/.ssh/authorized_keys"; \
+{%- else -%}
+cp /data/{{ root_key }} \
+"/target/root/.ssh/authorized_keys"; \
+{%- endif %}
+mkdir -p /target/home/{{ username }}/.ssh; \
+{% if user_key.startswith('http') -%}
+wget "{{ user_key }}" \
+-qO "/target/home/{{ username }}/.ssh/authorized_keys"; \
+chmod 600 /target/home/{{ username }}/.ssh/authorized_keys; \
+{%- else -%}
+cp /data/{{ user_key }} \
+"/target/home/{{ username }}/.ssh/authorized_keys"; \
+chmod 600 /target/home/{{ username }}/.ssh/authorized_keys; \
+{%- endif %}
+in-target chown -R {{ username }}:{{ username }} /home/{{ username }}/.ssh; \
+in-target usermod -a -G sudo {{ username }}; \
+mkdir /target/data{{ "; \\" if post_scripts is defined }}
+{% if post_scripts is defined -%}
+mkdir -p /target/data/preseed; \
+{% set post_script = post_scripts | first -%}
+{% if post_script.startswith('http') -%}
+wget -P /target/data/preseed -Nq "{{ post_scripts | first }}"; \
+sh /target/data/preseed/late_command.sh;
+{%- else -%}
+sh {{ post_script }};
+{%- endif %}
+{%- endif %}
+{{''}}

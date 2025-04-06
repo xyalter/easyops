@@ -1,0 +1,10 @@
+menuentry 'New Install' {
+  load_video
+  insmod gzio
+  insmod part_gpt
+  insmod ext2
+  set root='(hd0,gpt2)'
+  linux /boot/new/{{ os }}-installer/amd64/linux
+  initrd /boot/new/{{ os }}-installer/amd64/initrd.gz
+}
+{{''}}

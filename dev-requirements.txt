@@ -3,7 +3,9 @@ requests
 invoke
 jinja2
 
-autopep8
+black
 pylint
-wheel
 pytest
+
+wheel
+build

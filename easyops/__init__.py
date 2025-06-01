@@ -12,7 +12,7 @@ from os.path import sep as path_sep
 
 from .config import Config, Host
 
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 
 CONF_PATH = path_join("..", "configs")
 CONF_APT_PATH = path_join(CONF_PATH, "apt")

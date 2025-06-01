@@ -19,7 +19,7 @@ check_py3() {
     apt-get install -yqq --no-install-recommends pipx
 
     # apt-get install -yqq wget ca-certificates curl lsb-release pax python3-venv
-    apt-get install -yqq wget ca-certificates curl lsb-release pax
+    apt-get install -yqq --no-install-recommends wget ca-certificates curl lsb-release pax
     # python3 -m pip install -q -i "$PIP_MIRROR" --upgrade pip
     # pip3 install -q -i "$PIP_MIRROR" sortedcontainers requests invoke jinja2
 }
@@ -32,8 +32,8 @@ exec_script() {
 
 check_py3
 
-# pip3 install --no-deps --ignore-installed easyops-1.2.0-py3-none-any.whl
-pipx install ./easyops-1.2.0-py3-none-any.whl
+# pip3 install --no-deps --ignore-installed easyops-1.2.1-py3-none-any.whl
+pipx install ./easyops-1.2.1-py3-none-any.whl
 export PATH="/root/.local/bin:$PATH"
 
 exec_script "$@"

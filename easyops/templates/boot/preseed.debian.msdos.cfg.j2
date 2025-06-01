@@ -59,14 +59,14 @@ d-i partman-auto/method string regular
 #d-i partman-partitioning/choose_label select msdos
 d-i partman-partitioning/confirm_write_new_label boolean true
 #d-i partman-auto/choose_recipe select atomic
-d-i partman-auto/expert_recipe string                         \
-      aioroot ::                                              \
-              1000 100 -1 ext4                               \
-                      $primary{ } $bootable{ }                \
-                      method{ format } format{ }              \
-                      use_filesystem{ } filesystem{ ext4 }    \
-                      mountpoint{ / }                         \
-              .
+d-i partman-auto/expert_recipe string            \
+    aioroot ::                                   \
+        1000 100 -1 ext4                         \
+            $primary{ } $bootable{ }             \
+            method{ format } format{ }           \
+            use_filesystem{ } filesystem{ ext4 } \
+            mountpoint{ / }                      \
+        .
 #d-i partman-auto/choose_recipe select aioroot
 d-i partman/choose_partition select finish
 d-i partman-basicfilesystems/no_swap boolean false
